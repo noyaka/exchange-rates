@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Document</title>
+	</head>
+	<body>
+        <script>
+            const url = 'http://api.coinlayer.com';
+            let timestamp, cost, date;
+
+            //init
+            getLive();
+
+            //insert params to path
+            function params(paramsObj) {
+                return new URLSearchParams({
+                    access_key: '',
+                    target: 'USD',
+                    ...paramsObj
+                });
+            }
+
+            // start timer & get new record
+            async function getLive(options) {
+                countdown();
+                let res = await fetch(`${url}/live?${params(options)}&symbols=BTC`);
+                details = await res.json()
+                btcCost = details.rates['BTC'];
+                timestamp = details.timestamp;
+                // let timestamptry = this.performance.timing.connectEnd;
+                date = new Date(timestamp*1000).toGMTString();
+                if(date && btcCost){
+                    sendData(date, btcCost) 
+                }
+            }
+
+            //timer - every minute get a record
+            function countdown() {
+                let seconds = 59;
+                function tick() {
+                    seconds--;
+                    if (seconds > 0) {
+                        setTimeout(tick, 1000);
+                    }
+                    else {
+                        //minute is over, get new data
+                        getLive();
+                    }
+                }
+                tick();
+            }
+            
+            //send data to Airtable
+            async function sendData(date, cost){
+                const access_key_airtable = '';
+                const BaseId = 'appXAYm1RZF1HeHE6';
+                const tableURL = `https://api.airtable.com/v0/${BaseId}/ExchangeRate`
+                //get info into Airtable table
+                let response = await fetch(`${tableURL}`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({"records": [
+                        {
+                        "fields": {
+                            "Time": date,
+                            "Rates": cost
+                        }
+                        },
+                    ]}),
+                    headers: {
+                        "Authorization": `Bearer ${access_key_airtable}`,
+                        'Content-Type': 'application/json'
+                    },
+                });
+                response.json().then(data => {
+                console.log(data);
+                });
+            }
+
+		</script>
+	</body>
+</html>
