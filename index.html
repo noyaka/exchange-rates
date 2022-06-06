@@ -9,7 +9,7 @@
 	<body>
         <script>
             const url = 'http://api.coinlayer.com';
-            let timestamp, cost, date;
+            let timestamp, cost, date, addTime;
 
             //init
             getLive();
@@ -30,8 +30,9 @@
                 details = await res.json()
                 btcCost = details.rates['BTC'];
                 timestamp = details.timestamp;
-                // let timestamptry = this.performance.timing.connectEnd;
-                date = new Date(timestamp*1000).toGMTString();
+                //add 3 hours to get Israel time
+                addTime = 3*3600000;
+                date = new Date(timestamp*1000+addTime).toGMTString();
                 if(date && btcCost){
                     sendData(date, btcCost) 
                 }
